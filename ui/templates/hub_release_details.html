@@ -1,0 +1,68 @@
+{% extends "hub_base.html" %}
+{% block title %}{{ release.release_name }} – Release Details{% endblock %}
+
+{% block content %}
+<div class="hub-section-header">
+    <h1 class="hub-section-title">Release Details</h1>
+    <a href="{{ url_for('hub_overview', release_id=release.release_id) }}" class="btn-hub-outline" style="width:auto;">
+        <i class="bi bi-arrow-left me-1"></i>Back to Overview
+    </a>
+</div>
+
+<div class="hub-doc-card">
+    <form method="POST">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" style="font-size:0.85rem;">Release Name</label>
+                <input type="text" name="release_name" class="form-control form-control-sm"
+                       value="{{ release.release_name }}" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold" style="font-size:0.85rem;">Owner</label>
+                <input type="text" class="form-control form-control-sm" 
+                       value="{{ release.owner or 'Not assigned' }}" disabled
+                       title="Release owner is automatically set to the user who created the release">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold" style="font-size:0.85rem;">Target Date</label>
+                <input type="date" name="target_date" class="form-control form-control-sm"
+                       value="{{ release.target_date or '' }}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold" style="font-size:0.85rem;">Status</label>
+                <select name="status" class="form-select form-select-sm">
+                    {% for s in ['IN_PROGRESS', 'IN_REVIEW', 'READY', 'DEPLOYED'] %}
+                    <option value="{{ s }}" {% if release.status == s %}selected{% endif %}>
+                        {{ s.replace("_", " ").title() }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label fw-semibold" style="font-size:0.85rem;">Readiness %</label>
+                <input type="text" class="form-control form-control-sm" value="{{ release.readiness_pct }}%" disabled
+                       title="Computed automatically from PRs, defects, security risks and documentation">
+                <div class="form-text" style="font-size:0.72rem;">
+                    <i class="bi bi-info-circle me-1"></i>Auto-computed from hub data — view breakdown on <a href="{{ url_for('hub_overview', release_id=release.release_id) }}">Overview</a>.
+                </div>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn-hub-primary" style="width:auto;display:inline-block;padding:8px 20px;">
+                    <i class="bi bi-save me-1"></i>Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="hub-doc-card">
+    <div class="hub-doc-card-title">Linked Project</div>
+    <p style="font-size:0.87rem;color:#374151;margin:0;">
+        {% if release.project_name %}
+            {{ release.project_name }}
+        {% else %}
+            <span class="text-muted">No project linked</span>
+        {% endif %}
+    </p>
+</div>
+{% endblock %}

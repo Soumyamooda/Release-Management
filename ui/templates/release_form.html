@@ -1,0 +1,72 @@
+{% extends "hub_base.html" %}
+
+{% block title %}{% if release %}Edit Release{% else %}New Release{% endif %}{% endblock %}
+
+{% block content %}
+<div class="hub-section-header">
+    <h1 class="hub-section-title">
+        <i class="bi bi-{% if release %}pencil{% else %}plus-lg{% endif %} me-2"></i>
+        {% if release %}Edit Release{% else %}New Release{% endif %}
+    </h1>
+</div>
+
+<div style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:28px 32px;max-width:560px;">
+    <form method="POST">
+        <div class="mb-3">
+            <label for="release_name" class="form-label fw-semibold" style="font-size:0.85rem;">
+                Release Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control form-control-sm" id="release_name" name="release_name"
+                   value="{{ release.release_name if release else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="version" class="form-label fw-semibold" style="font-size:0.85rem;">Version <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="version" name="version"
+                   placeholder="e.g. 2.4.0"
+                   value="{{ release.version if release and release.version else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="release_date" class="form-label fw-semibold" style="font-size:0.85rem;">Release Date <span class="text-danger">*</span></label>
+            <input type="date" class="form-control form-control-sm" id="release_date" name="release_date"
+                   value="{{ release.release_date if release and release.release_date else '' }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="project_id" class="form-label fw-semibold" style="font-size:0.85rem;">Project <span class="text-danger">*</span></label>
+            <select class="form-select form-select-sm" id="project_id" name="project_id" required>
+                <option value="">— No project —</option>
+                {% for project in projects %}
+                <option value="{{ project.project_id }}"
+                    {% if release and release.project_id == project.project_id %}selected{% endif %}>
+                    {{ project.project_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="release_branch" class="form-label fw-semibold" style="font-size:0.85rem;">Release Branch Link <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm" id="release_branch" name="release_branch"
+                   placeholder="e.g. feature/release-2.4.0"
+                   value="{{ release.release_branch if release and release.release_branch else '' }}" required>
+        </div>
+
+        <div class="mb-4">
+            <label for="release_summary" class="form-label fw-semibold" style="font-size:0.85rem;">Release Summary</label>
+            <textarea class="form-control form-control-sm" id="release_summary" name="release_summary"
+                      rows="3" placeholder="Brief description of this release...">{{ release.release_summary if release and release.release_summary else '' }}</textarea>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn-hub-primary" style="width:auto;padding:8px 20px;">
+                {% if release %}Save Changes{% else %}Create Release{% endif %}
+            </button>
+            <a href="{{ url_for('index') }}" class="btn-hub-outline" style="width:auto;padding:8px 20px;display:inline-block;">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

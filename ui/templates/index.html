@@ -1,0 +1,121 @@
+{% extends "hub_base.html" %}
+{% block title %}Release Manager{% endblock %}
+
+{% block content %}
+
+<div class="hub-section-header">
+    <h1 class="hub-section-title">All Releases</h1>
+    <div class="d-flex gap-2 align-items-center">
+        <div class="dropdown">
+            <button class="btn-hub-outline dropdown-toggle" type="button" data-bs-toggle="dropdown"
+                    style="width:auto;padding:6px 14px;font-size:0.82rem;display:inline-block;">
+                <i class="bi bi-funnel me-1"></i>
+                {% if status_filter %}{{ status_filter.replace('_',' ').title() }}{% else %}All Statuses{% endif %}
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item {% if not status_filter %}fw-semibold{% endif %}"
+                       href="{{ url_for('index') }}">All</a></li>
+                <li><a class="dropdown-item {% if status_filter == 'IN_PROGRESS' %}fw-semibold{% endif %}"
+                       href="{{ url_for('index', status='IN_PROGRESS') }}">In Progress</a></li>
+                <li><a class="dropdown-item {% if status_filter == 'IN_REVIEW' %}fw-semibold{% endif %}"
+                       href="{{ url_for('index', status='IN_REVIEW') }}">In Review</a></li>
+                <li><a class="dropdown-item {% if status_filter == 'READY' %}fw-semibold{% endif %}"
+                       href="{{ url_for('index', status='READY') }}">Ready</a></li>
+        
+            </ul>
+        </div>
+        <a href="{{ url_for('create_release') }}" class="btn-hub-primary" style="width:auto;padding:8px 16px;">
+            <i class="bi bi-plus-lg me-1"></i>New Release
+        </a>
+    </div>
+</div>
+
+<div class="rm-stats-row">
+    <div class="rm-stat-card">
+        <div class="rm-stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+        <div class="rm-stat-info">
+            <div class="rm-stat-number">{{ stats.total }}</div>
+            <div class="rm-stat-label">Releases</div>
+        </div>
+    </div>
+    <div class="rm-stat-card">
+        <div class="rm-stat-icon"><i class="bi bi-arrow-repeat"></i></div>
+        <div class="rm-stat-info">
+            <div class="rm-stat-number">{{ stats.in_progress }}</div>
+            <div class="rm-stat-label">In Progress</div>
+        </div>
+    </div>
+    <div class="rm-stat-card">
+        <div class="rm-stat-icon"><i class="bi bi-eye"></i></div>
+        <div class="rm-stat-info">
+            <div class="rm-stat-number">{{ stats.in_review }}</div>
+            <div class="rm-stat-label">In Review</div>
+        </div>
+    </div>
+    <div class="rm-stat-card">
+        <div class="rm-stat-icon"><i class="bi bi-check-circle"></i></div>
+        <div class="rm-stat-info">
+            <div class="rm-stat-number">{{ stats.ready }}</div>
+            <div class="rm-stat-label">Ready</div>
+        </div>
+    </div>
+</div>
+
+{% if releases %}
+<table class="hub-table">
+    <thead>
+        <tr>
+            <th>Release</th>
+            <th>Project</th>
+            <th>Owner</th>
+            <th>Readiness</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in releases %}
+        {% set r = item.release %}
+        <tr>
+            <td><a href="{{ url_for('hub_overview', release_id=r.release_id) }}" style="color:#1d4ed8;text-decoration:none;font-weight:600;">{{ r.release_name }}</a></td>
+            <td style="font-size:0.83rem;">{{ r.project_name or '—' }}</td>
+            <td style="font-size:0.83rem;">{{ r.owner or '—' }}</td>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="progress" style="width:70px;height:8px;">
+                        <div class="progress-bar
+                            {% if r.readiness_pct >= 80 %}bg-success
+                            {% elif r.readiness_pct >= 50 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            style="width:{{ r.readiness_pct }}%"></div>
+                    </div>
+                    <span style="font-size:0.78rem;color:#6b7280;">{{ r.readiness_pct }}%</span>
+                </div>
+            </td>
+            <td>
+                <div class="d-flex gap-1">
+                    <a href="{{ url_for('edit_release', release_id=r.release_id) }}"
+                       class="btn-hub-outline" style="width:auto;padding:5px 9px;font-size:0.78rem;display:inline-block;">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="{{ url_for('delete_release', release_id=r.release_id) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('Delete this release?')">
+                        <button type="submit" class="btn-hub-outline"
+                                style="width:auto;padding:5px 9px;font-size:0.78rem;color:#ef4444;border-color:#fca5a5;">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="hub-empty">
+    <i class="bi bi-inbox" style="font-size:2.5rem;display:block;margin-bottom:10px;"></i>
+    No releases found. <a href="{{ url_for('create_release') }}">Create the first one</a>.
+</div>
+{% endif %}
+
+{% endblock %}

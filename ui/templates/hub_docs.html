@@ -1,0 +1,363 @@
+{% extends "hub_base.html" %}
+{% block title %}{{ release.release_name }} – Documentation{% endblock %}
+
+{% block content %}
+
+<div id="doc-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:1050;overflow-y:auto;">
+  <div style="background:#fff;border-radius:12px;max-width:780px;margin:48px auto;padding:0;box-shadow:0 20px 60px rgba(0,0,0,0.25);">
+
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 28px 16px;border-bottom:1px solid #e5e7eb;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <i class="bi bi-stars" style="font-size:1.3rem;color:#f59e0b;"></i>
+        <span style="font-weight:700;font-size:1.05rem;color:#111827;">AI-Generated Documentation</span>
+        <span id="modal-status-badge" style="font-size:0.75rem;padding:3px 10px;border-radius:20px;background:#fef3c7;color:#92400e;font-weight:600;">Pending Approval</span>
+      </div>
+      <button onclick="closeDocModal()" style="background:none;border:none;font-size:1.4rem;color:#9ca3af;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+
+    <div id="modal-loading" style="padding:60px 28px;text-align:center;">
+      <div style="display:inline-block;width:56px;height:56px;border:4px solid #fef3c7;border-top-color:#f59e0b;border-radius:50%;animation:spin 0.9s linear infinite;margin-bottom:18px;"></div>
+      <div style="font-weight:600;font-size:1rem;color:#374151;margin-bottom:6px;">Bedrock AI is writing your release notes…</div>
+      <div id="modal-loading-step" style="font-size:0.83rem;color:#9ca3af;">Connecting to AWS Bedrock…</div>
+    </div>
+
+    <div id="modal-error" style="display:none;padding:36px 28px;">
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px 20px;color:#b91c1c;font-size:0.88rem;">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        <span id="modal-error-msg"></span>
+      </div>
+    </div>
+
+    <div id="modal-content" style="display:none;padding:24px 28px;">
+      <div style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:32px;height:32px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-file-text" style="color:#16a34a;"></i>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;color:#111827;">Release Notes</div>
+            <div style="font-size:0.75rem;color:#9ca3af;">AI-generated summary of changes</div>
+          </div>
+        </div>
+        <div id="modal-release-notes"
+             style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;
+                    font-size:0.84rem;line-height:1.75;color:#374151;white-space:pre-wrap;max-height:260px;overflow-y:auto;">
+        </div>
+      </div>
+
+      <div id="modal-impact-wrap" style="margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <div style="width:32px;height:32px;background:#eff6ff;border-radius:8px;display:flex;align-items:center;justify-content:center;">
+            <i class="bi bi-bar-chart-line" style="color:#3b82f6;"></i>
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;color:#111827;">Impact Summary</div>
+            <div style="font-size:0.75rem;color:#9ca3af;">Affected modules, resolved defects, open risks</div>
+          </div>
+        </div>
+        <div id="modal-impact-summary"
+             style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:14px 16px;
+                    font-size:0.84rem;line-height:1.75;color:#1e3a5f;white-space:pre-wrap;">
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-footer" style="display:none;padding:16px 28px 22px;border-top:1px solid #e5e7eb;display:none;gap:10px;justify-content:flex-end;align-items:center;">
+      <button onclick="closeDocModal()"
+              style="padding:9px 22px;border:1px solid #d1d5db;border-radius:8px;background:#fff;color:#374151;font-size:0.87rem;font-weight:600;cursor:pointer;">
+        <i class="bi bi-x-lg me-1"></i>Cancel
+      </button>
+      <button id="approve-btn" onclick="approveDoc()"
+              style="padding:9px 22px;border:none;border-radius:8px;background:#16a34a;color:#fff;font-size:0.87rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">
+        <i class="bi bi-patch-check"></i>
+        <span id="approve-label">Approve &amp; Save to Database</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="hub-section-header">
+    <div>
+        <h1 class="hub-section-title">
+            <i class="bi bi-file-earmark-text me-2"></i>Auto Documentation
+        </h1>
+        <p style="font-size:0.82rem;color:#6b7280;margin:4px 0 0;">
+            Release notes are generated by <strong>AWS Bedrock AI</strong> from your attached
+            pull requests, JIRA defects, security risks, and project context.
+        </p>
+    </div>
+
+    <div class="d-flex gap-2 align-items-center">
+        <button type="button" id="gen-btn"
+                onclick="generateDocs({{ release.release_id }})"
+                class="btn-hub-primary"
+                style="width:auto;padding:8px 18px;display:inline-flex;align-items:center;gap:6px;">
+            <i class="bi bi-magic"></i>
+            {% if doc and doc.status != 'NOT_GENERATED' %}Regenerate Doc{% else %}Generate Doc{% endif %}
+        </button>
+
+        {% if doc and doc.status == 'GENERATED' %}
+        <form method="POST" action="{{ url_for('hub_approve_docs', release_id=release.release_id) }}">
+            <button type="submit" class="btn-hub-success" style="width:auto;padding:8px 18px;">
+                <i class="bi bi-patch-check me-1"></i>Approve
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if doc and doc.status != 'NOT_GENERATED' %}
+
+<div class="hub-doc-meta-bar">
+    <div class="hub-doc-meta-left">
+        {% if doc.status == 'APPROVED' %}
+            <span class="hub-status-pill pill-closed" style="font-size:0.82rem;padding:5px 14px;">
+                <i class="bi bi-patch-check-fill me-1"></i>Approved
+            </span>
+        {% else %}
+            <span class="hub-status-pill pill-in-progress" style="font-size:0.82rem;padding:5px 14px;">
+                <i class="bi bi-clock me-1"></i>Generated – Pending Approval
+            </span>
+        {% endif %}
+
+        <span class="hub-doc-meta-badge">
+            <i class="bi bi-stars me-1" style="color:#f59e0b;"></i>AWS Bedrock AI
+        </span>
+
+        {% if doc.generated_at %}
+        <span style="font-size:0.78rem;color:#9ca3af;">
+            Generated {{ doc.generated_at[:16].replace('T', ' ') if doc.generated_at else '—' }} UTC
+        </span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="hub-doc-output-card">
+    <div class="hub-doc-output-header">
+        <div class="hub-doc-output-icon"><i class="bi bi-file-text"></i></div>
+        <div>
+            <div class="hub-doc-output-title">Release Notes</div>
+            <div class="hub-doc-output-sub">AI-generated summary of changes in this release</div>
+        </div>
+    </div>
+    <div class="hub-doc-output-body" id="release-notes-display">
+        {{ doc.release_notes or '' }}
+    </div>
+</div>
+
+{% if doc.impact_summary %}
+<div class="hub-doc-output-card hub-doc-impact-card">
+    <div class="hub-doc-output-header">
+        <div class="hub-doc-output-icon" style="background:#eff6ff;color:#3b82f6;">
+            <i class="bi bi-bar-chart-line"></i>
+        </div>
+        <div>
+            <div class="hub-doc-output-title">Impact Summary</div>
+            <div class="hub-doc-output-sub">Affected modules, resolved defects, open risks</div>
+        </div>
+    </div>
+    <div class="hub-doc-output-body">{{ doc.impact_summary }}</div>
+</div>
+{% endif %}
+
+<div class="hub-doc-card" style="margin-top:20px;">
+    <div class="hub-doc-card-title d-flex align-items-center justify-content-between" style="cursor:pointer;" onclick="toggleEdit()">
+        <span><i class="bi bi-pencil-square me-2"></i>Edit Generated Notes</span>
+        <i class="bi bi-chevron-down" id="edit-chevron" style="color:#9ca3af;font-size:0.8rem;transition:transform 0.2s;"></i>
+    </div>
+
+    <div id="edit-panel" style="display:none;margin-top:14px;">
+        <p style="font-size:0.8rem;color:#6b7280;margin-bottom:12px;">
+            Edit the AI output below, then click <strong>Save Edits</strong>. Changes will not affect the Bedrock model.
+        </p>
+        <form method="POST" action="{{ url_for('hub_update_docs', release_id=release.release_id) }}">
+            <div class="mb-3">
+                <label class="form-label fw-semibold" style="font-size:0.85rem;">Release Notes</label>
+                <textarea name="release_notes" class="form-control" rows="12"
+                          style="font-size:0.83rem;font-family:monospace;line-height:1.6;">{{ doc.release_notes or '' }}</textarea>
+            </div>
+            <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Risk Summary</label>
+                <textarea name="impact_summary" class="form-control" rows="4"
+                          style="font-size:0.83rem;">{{ doc.risk_summary or doc.impact_summary or '' }}</textarea>
+            </div>
+            <button type="submit" class="btn-hub-outline" style="width:auto;display:inline-block;padding:7px 20px;">
+                <i class="bi bi-save me-1"></i>Save Edits
+            </button>
+        </form>
+    </div>
+</div>
+
+{% else %}
+
+<div class="hub-ai-empty-state">
+    <div class="hub-ai-empty-orb">
+        <i class="bi bi-magic" style="font-size:2rem;color:#f59e0b;"></i>
+    </div>
+    <div class="hub-ai-empty-title">No documentation generated yet</div>
+    <div class="hub-ai-empty-sub">
+        Click <strong>Generate Docs</strong> above. Bedrock AI will read your attached pull
+        requests, JIRA defects, security risks, and project description to write
+        professional release notes in seconds.
+    </div>
+    <div class="hub-ai-empty-chips">
+        <span class="hub-ai-chip"><i class="bi bi-git me-1"></i>Pull Requests</span>
+        <span class="hub-ai-chip"><i class="bi bi-bug me-1"></i>Defects</span>
+        <span class="hub-ai-chip"><i class="bi bi-shield-exclamation me-1"></i>Security Risks</span>
+        <span class="hub-ai-chip"><i class="bi bi-info-circle me-1"></i>Project Context</span>
+    </div>
+</div>
+
+{% endif %}
+
+<script>
+/* ── Doc generation modal ──────────────────────────────── */
+
+const LOADING_STEPS = [
+  'Connecting to AWS Bedrock…',
+  'Reading pull request titles…',
+  'Analysing JIRA defects & severity…',
+  'Reviewing security risks…',
+  'Composing release notes…',
+  'Finalising impact summary…'
+];
+
+let _stepTimer = null;
+
+function openDocModal() {
+  document.getElementById('doc-modal-overlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDocModal() {
+  document.getElementById('doc-modal-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+  if (_stepTimer) { clearInterval(_stepTimer); _stepTimer = null; }
+}
+
+function showModalLoading() {
+  document.getElementById('modal-loading').style.display = 'block';
+  document.getElementById('modal-error').style.display  = 'none';
+  document.getElementById('modal-content').style.display = 'none';
+  document.getElementById('modal-footer').style.display  = 'none';
+
+  // Cycle loading messages
+  let i = 1;
+  const el = document.getElementById('modal-loading-step');
+  el.textContent = LOADING_STEPS[0];
+  _stepTimer = setInterval(() => {
+    if (i < LOADING_STEPS.length) { el.textContent = LOADING_STEPS[i++]; }
+    else { clearInterval(_stepTimer); _stepTimer = null; }
+  }, 2200);
+}
+
+function showModalContent(doc) {
+  if (_stepTimer) { clearInterval(_stepTimer); _stepTimer = null; }
+  document.getElementById('modal-loading').style.display  = 'none';
+  document.getElementById('modal-error').style.display    = 'none';
+  document.getElementById('modal-content').style.display  = 'block';
+  document.getElementById('modal-footer').style.display   = 'flex';
+
+  document.getElementById('modal-release-notes').textContent = doc.release_notes || '';
+
+  const impactWrap = document.getElementById('modal-impact-wrap');
+  const impactEl   = document.getElementById('modal-impact-summary');
+  if (doc.risk_summary || doc.impact_summary) {
+    impactEl.textContent = doc.risk_summary || doc.impact_summary;
+    impactWrap.style.display = 'block';
+  } else {
+    impactWrap.style.display = 'none';
+  }
+
+  const badge = document.getElementById('modal-status-badge');
+  if (doc.status === 'APPROVED') {
+    badge.textContent = 'Approved';
+    badge.style.background = '#dcfce7';
+    badge.style.color = '#15803d';
+    document.getElementById('approve-btn').style.display = 'none';
+  } else {
+    badge.textContent = 'Pending Approval';
+    badge.style.background = '#fef3c7';
+    badge.style.color = '#92400e';
+    document.getElementById('approve-btn').style.display = 'inline-flex';
+  }
+}
+
+function showModalError(msg) {
+  if (_stepTimer) { clearInterval(_stepTimer); _stepTimer = null; }
+  document.getElementById('modal-loading').style.display = 'none';
+  document.getElementById('modal-error').style.display   = 'block';
+  document.getElementById('modal-error-msg').textContent = msg;
+}
+
+function generateDocs(releaseId) {
+  openDocModal();
+  showModalLoading();
+  document.getElementById('gen-btn').disabled = true;
+
+  fetch(`/hub/releases/${releaseId}/docs/generate-ajax`, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '' },  // no CSRF needed (same-origin dev)
+  })
+  .then(r => r.json())
+  .then(data => {
+    document.getElementById('gen-btn').disabled = false;
+    if (data.ok) {
+      showModalContent(data.doc);
+    } else {
+      showModalError(data.error || 'Unknown error from backend');
+    }
+  })
+  .catch(err => {
+    document.getElementById('gen-btn').disabled = false;
+    showModalError('Network error: ' + err.message);
+  });
+}
+
+function approveDoc() {
+  const releaseId = {{ release.release_id }};
+  const btn   = document.getElementById('approve-btn');
+  const label = document.getElementById('approve-label');
+  btn.disabled = true;
+  label.textContent = 'Saving…';
+
+  fetch(`/hub/releases/${releaseId}/docs/approve-ajax`, { method: 'POST' })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      closeDocModal();
+      // Reload page so status bar and approve button refresh
+      window.location.reload();
+    } else {
+      btn.disabled = false;
+      label.textContent = 'Approve & Save to Database';
+      alert('Approval failed: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(err => {
+    btn.disabled = false;
+    label.textContent = 'Approve & Save to Database';
+    alert('Network error: ' + err.message);
+  });
+}
+
+/* Close modal when clicking the dark overlay */
+document.getElementById('doc-modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeDocModal();
+});
+
+/* ── Edit panel toggle ─────────────────────────────────── */
+function toggleEdit() {
+  const panel   = document.getElementById('edit-panel');
+  const chevron = document.getElementById('edit-chevron');
+  const open    = panel.style.display !== 'none';
+  panel.style.display     = open ? 'none' : 'block';
+  chevron.style.transform = open ? '' : 'rotate(180deg)';
+}
+</script>
+{% endblock %}

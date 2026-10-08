@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-bold">Projects</h5>
+    <a href="{{ url_for('create_project') }}" class="btn btn-action">
+        <i class="bi bi-plus-lg me-1"></i>New Project
+    </a>
+</div>
+
+{% if projects %}
+<div class="table-responsive">
+    <table class="release-table">
+        <thead>
+            <tr>
+                <th class="col-num">#</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td class="col-num">{{ project.project_id }}</td>
+                <td class="fw-medium">{{ project.project_name }}</td>
+                <td class="text-muted">{{ project.description or "—" }}</td>
+                <td>
+                    <span class="badge {% if project.status == 'ACTIVE' %}bg-success{% else %}bg-secondary{% endif %}">
+                        {{ project.status }}
+                    </span>
+                </td>
+                <td class="text-muted small">{{ project.created_at[:10] }}</td>
+                <td class="text-end">
+                    <a href="{{ url_for('edit_project', project_id=project.project_id) }}"
+                       class="btn btn-sm btn-outline-secondary me-1">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                    <form action="{{ url_for('delete_project', project_id=project.project_id) }}"
+                          method="POST" class="d-inline"
+                          onsubmit="return confirm('Delete this project?')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="bi bi-folder2-open"></i>
+    <p>No projects yet.</p>
+    <a href="{{ url_for('create_project') }}" class="btn btn-action">Create your first project</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,252 @@
+{% extends "hub_base.html" %}
+{% block title %}{{ release.release_name }} – JIRA Defects{% endblock %}
+
+{% block content %}
+<div class="hub-section-header">
+    <div>
+        <h1 class="hub-section-title">
+            <i class="bi bi-bug me-2 text-danger"></i>JIRA Defects
+        </h1>
+        <p style="font-size:0.82rem;color:#6b7280;margin:4px 0 0;">
+            All defects linked to <strong>{{ release.release_name }}</strong>
+        </p>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+        <form method="POST" action="{{ url_for('hub_sync_jira_defects', release_id=release_id) }}" style="margin:0;">
+            <button type="submit" class="btn-hub-outline" style="width:auto;padding:8px 16px;background:#f0fdf4;border-color:#16a34a;color:#16a34a;">
+                <i class="bi bi-arrow-repeat me-1"></i>Sync from JIRA
+            </button>
+        </form>
+        <a href="{{ url_for('hub_overview', release_id=release.release_id) }}"
+           class="btn-hub-outline" style="width:auto;padding:8px 16px;text-decoration:none;">
+            <i class="bi bi-arrow-left me-1"></i>Back to Overview
+        </a>
+    </div>
+</div>
+
+{% set open_count = defects | selectattr('status', 'in', ['New', 'In Analysis', 'new', 'in analysis']) | list | length %}
+{% set closed_count = defects | selectattr('status', 'equalto', 'Closed') | list | length %}
+{% set high_count = defects | selectattr('priority', 'equalto', 'High') | list | length %}
+<div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:100px;background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:700;color:#dc2626;">{{ open_count }}</div>
+        <div style="font-size:0.78rem;color:#6b7280;margin-top:2px;">Open</div>
+    </div>
+    <div style="flex:1;min-width:100px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:700;color:#16a34a;">{{ closed_count }}</div>
+        <div style="font-size:0.78rem;color:#6b7280;margin-top:2px;">Closed</div>
+    </div>
+    <div style="flex:1;min-width:100px;background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:700;color:#dc2626;">{{ high_count }}</div>
+        <div style="font-size:0.78rem;color:#6b7280;margin-top:2px;">High Severity</div>
+    </div>
+    <div style="flex:1;min-width:100px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px 16px;text-align:center;">
+        <div style="font-size:1.6rem;font-weight:700;color:#111827;">{{ defects | length }}</div>
+        <div style="font-size:0.78rem;color:#6b7280;margin-top:2px;">Total</div>
+    </div>
+</div>
+
+{% if defects %}
+<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+    <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:0.78rem;color:#6b7280;font-weight:600;white-space:nowrap;">Severity</label>
+        <select id="filter-severity" onchange="applyFilters()"
+                style="font-size:0.82rem;padding:5px 10px;border:1px solid #d1d5db;border-radius:7px;background:#fff;color:#374151;cursor:pointer;">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:0.78rem;color:#6b7280;font-weight:600;white-space:nowrap;">Status</label>
+        <select id="filter-status" onchange="applyFilters()"
+                style="font-size:0.82rem;padding:5px 10px;border:1px solid #d1d5db;border-radius:7px;background:#fff;color:#374151;cursor:pointer;">
+            <option value="">All</option>
+        </select>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+        <label style="font-size:0.78rem;color:#6b7280;font-weight:600;white-space:nowrap;">Assignee</label>
+        <select id="filter-assignee" onchange="applyFilters()"
+                style="font-size:0.82rem;padding:5px 10px;border:1px solid #d1d5db;border-radius:7px;background:#fff;color:#374151;cursor:pointer;">
+            <option value="">All</option>
+        </select>
+    </div>
+    <button onclick="clearFilters()" id="clear-filters-btn"
+            style="font-size:0.78rem;padding:5px 12px;border:1px solid #d1d5db;border-radius:7px;background:#f9fafb;color:#6b7280;cursor:pointer;display:none;">
+        ✕ Clear Filters
+    </button>
+    <span id="filter-count" style="font-size:0.78rem;color:#6b7280;margin-left:4px;"></span>
+</div>
+
+<table class="hub-table">
+    <thead>
+        <tr>
+            <th>DEFECT ID</th>
+            <th>TITLE</th>
+            <th>SEVERITY</th>
+            <th>STATUS</th>
+            <th>ASSIGNEE</th>
+        </tr>
+    </thead>
+    <tbody id="defects-table-body">
+        {% for d in defects %}
+        <tr data-severity="{{ (d.priority or 'medium').lower() }}" data-status="{{ d.status | lower }}" data-assignee="{{ (d.assigned_to or '') | lower }}">
+            <td>
+                <a href="{{ jira_base_url }}/browse/{{ d.issue_key }}" target="_blank" rel="noopener noreferrer"
+                   style="color:#1d4ed8;font-weight:600;text-decoration:none;white-space:nowrap;">
+                    {{ d.issue_key }}
+                    <i class="bi bi-box-arrow-up-right ms-1" style="font-size:0.7rem;"></i>
+                </a>
+            </td>
+            <td>{{ d.title }}</td>
+            <td>
+                {% if (d.priority or 'medium').lower() == 'high' %}
+                    <span class="hub-severity sev-high"><i class="bi bi-exclamation-triangle-fill me-1"></i>High</span>
+                {% else %}
+                    <span class="hub-severity sev-{{ (d.priority or 'medium').lower() }}">{{ (d.priority or 'Medium').title() }}</span>
+                {% endif %}
+            </td>
+            <td>
+                <span class="hub-status-pill
+                    {% if d.status == 'Open' %}pill-open
+                    {% elif d.status == 'In Progress' %}pill-in-progress
+                    {% else %}pill-closed{% endif %}">
+                    {{ d.status }}
+                </span>
+            </td>
+            <td style="font-size:0.82rem;">
+                <i class="bi bi-person-fill me-1 text-muted"></i>{{ d.assigned_to or '—' }}
+            </td>
+
+        </tr>
+
+        <!-- Edit/Delete modals kept (hidden) for data integrity -->
+        <div class="modal fade" id="editDefectModal{{ d.work_item_id }}" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <form method="POST" action="{{ url_for('hub_update_defect', release_id=release.release_id, defect_id=d.work_item_id) }}">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Edit {{ d.issue_key }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" style="font-size:0.85rem;">Issue Key</label>
+                                <input type="text" name="issue_key" class="form-control form-control-sm"
+                                       value="{{ d.issue_key }}" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" style="font-size:0.85rem;">Title</label>
+                                <input type="text" name="title" class="form-control form-control-sm"
+                                       value="{{ d.title }}" required>
+                            </div>
+                            <div class="row g-2 mb-3">
+                                <div class="col">
+                                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Issue Type</label>
+                                    <select name="issue_type" class="form-select form-select-sm">
+                                        {% for t in ['Bug', 'Story', 'Task'] %}
+                                        <option value="{{ t }}" {% if d.issue_type == t %}selected{% endif %}>{{ t }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Priority</label>
+                                    <select name="priority" class="form-select form-select-sm">
+                                        {% for p in ['High', 'Medium', 'Low'] %}
+                                        <option value="{{ p }}" {% if d.priority == p %}selected{% endif %}>{{ p }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col">
+                                    <label class="form-label fw-semibold" style="font-size:0.85rem;">Status</label>
+                                    <select name="status" class="form-select form-select-sm">
+                                        {% for s in ['Open', 'In Progress', 'Done'] %}
+                                        <option value="{{ s }}" {% if d.status == s %}selected{% endif %}>{{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold" style="font-size:0.85rem;">Assigned To</label>
+                                <input type="text" name="assigned_to" class="form-control form-control-sm"
+                                       value="{{ d.assigned_to or '' }}" placeholder="e.g. Bob Smith">
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </tbody>
+</table>
+
+<script>
+(function () {
+    const tbody  = document.getElementById('defects-table-body');
+    const rows   = Array.from(tbody ? tbody.querySelectorAll('tr') : []);
+    const selSev = document.getElementById('filter-severity');
+    const selSta = document.getElementById('filter-status');
+    const selAss = document.getElementById('filter-assignee');
+
+    // Build unique option sets
+    const sevSet = new Set(), staSet = new Set(), assSet = new Set();
+    rows.forEach(r => {
+        if (r.dataset.severity) sevSet.add(r.dataset.severity);
+        if (r.dataset.status)   staSet.add(r.dataset.status);
+        if (r.dataset.assignee && r.dataset.assignee.trim()) assSet.add(r.dataset.assignee.trim());
+    });
+
+    const populate = (sel, set) => {
+        [...set].sort().forEach(v => {
+            const o = document.createElement('option');
+            o.value = v; o.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+            sel.appendChild(o);
+        });
+    };
+    populate(selSev, sevSet);
+    populate(selSta, staSet);
+    populate(selAss, assSet);
+
+    window.applyFilters = function () {
+        const sev = selSev.value;
+        const sta = selSta.value;
+        const ass = selAss.value;
+        let visible = 0;
+        rows.forEach(r => {
+            const match =
+                (!sev || r.dataset.severity === sev) &&
+                (!sta || r.dataset.status   === sta) &&
+                (!ass || r.dataset.assignee === ass);
+            r.style.display = match ? '' : 'none';
+            if (match) visible++;
+        });
+        const active = sev || sta || ass;
+        document.getElementById('clear-filters-btn').style.display = active ? '' : 'none';
+        document.getElementById('filter-count').textContent = active ? `Showing ${visible} of ${rows.length}` : '';
+    };
+
+    window.clearFilters = function () {
+        selSev.value = ''; selSta.value = ''; selAss.value = '';
+        applyFilters();
+    };
+})();
+</script>
+
+<div style="margin-top:16px;">
+    <button class="btn-hub-primary" style="width:auto;padding:8px 16px;"
+            data-bs-toggle="modal" data-bs-target="#addDefectModal">
+        <i class="bi bi-plus-lg me-1"></i>Add Work Item
+    </button>
+</div>
+
+{% else %}
+<div class="hub-empty">
+    <i class="bi bi-bug" style="font-size:2rem;display:block;margin-bottom:8px;"></i>
+    No work items linked to this release yet.<br>
+    <small>Wait for JIRA integration to sync automatically.</small>
+</div>
+{% endif %}
+
+{% endblock %}

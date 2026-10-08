@@ -1,0 +1,277 @@
+{% extends "hub_base.html" %}
+{% block title %}{{ overview.release.release_name }} – Overview{% endblock %}
+
+{% block content %}
+
+<div class="hub-release-title-bar">
+    <div>
+        <h1 class="hub-release-title">Release: {{ overview.release.release_name }}</h1>
+        <div class="hub-release-meta">
+            <span>Owner: <strong>{{ overview.release.owner or "—" }}</strong></span>
+            <span class="meta-sep">|</span>
+            <span>Target Date:
+                <strong>
+                    {% if overview.release.target_date %}
+                        {{ overview.release.target_date }}
+                    {% else %}
+                        Not set
+                    {% endif %}
+                </strong>
+            </span>
+            <span class="meta-sep">|</span>
+            <span>Status: <strong>{{ overview.release.status.replace("_", " ").title() }}</strong></span>
+        </div>
+    </div>
+
+    {% set pct = overview.readiness.total %}
+    {% set risk = overview.readiness.risk_level %}
+    <div class="hub-readiness-badge">
+        <div class="hub-readiness-pct">Readiness {{ pct }}%</div>
+        {% if risk == "HIGH" %}
+            <div class="hub-risk-high">HIGH RISK</div>
+        {% elif risk == "LOW" %}
+            <div class="hub-risk-low">LOW RISK</div>
+        {% else %}
+            <div class="hub-risk-medium">MEDIUM RISK</div>
+        {% endif %}
+    </div>
+</div>
+
+<div style="background:#fff;border:1px solid #e0e3e8;border-radius:8px;padding:14px 20px;margin-bottom:18px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-size:0.82rem;font-weight:700;color:#374151;">Readiness Breakdown</span>
+        <span style="font-size:0.78rem;color:#6b7280;">Each category worth 25 pts &nbsp;|&nbsp; Total: <strong>{{ pct }}/100</strong></span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">
+        {% for cat in overview.readiness.categories %}
+        <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                <span style="font-size:0.75rem;font-weight:600;color:#374151;">{{ cat.label }}</span>
+                <span style="font-size:0.75rem;color:#6b7280;">{{ cat.score }}/{{ cat.max_score }}</span>
+            </div>
+            <div style="height:7px;background:#f3f4f6;border-radius:4px;overflow:hidden;">
+                {% if cat.score == cat.max_score %}
+                    {% set bar_class = "readiness-bar--complete" %}
+                {% elif cat.score == 0 %}
+                    {% set bar_class = "readiness-bar--zero" %}
+                {% else %}
+                    {% set bar_class = "readiness-bar--partial" %}
+                {% endif %}
+                <div class="readiness-bar {{ bar_class }}"
+                     data-width="{{ (cat.score / cat.max_score * 100) | int }}"></div>
+            </div>
+            <div style="font-size:0.7rem;color:#9ca3af;margin-top:3px;">{{ cat.detail }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+<script>
+    document.querySelectorAll('.readiness-bar[data-width]').forEach(function(el) {
+        el.style.width = el.dataset.width + '%';
+    });
+</script>
+
+<div class="hub-panels-row">
+
+    <div class="hub-panel hub-panel-blue">
+        <h2 class="hub-panel-title"><i class="bi bi-git me-2 text-primary"></i>Attached Pull Requests</h2>
+        {% if overview.pull_requests %}
+            <ul class="hub-item-list">
+                {% for pr in overview.pull_requests[:3] %}
+                <li>
+                    {% if pr.status in ['Merged', 'MERGED'] %}
+                        <span class="dot dot-green"></span>
+                    {% elif pr.status in ['Open', 'OPEN'] %}
+                        <span class="dot dot-orange"></span>
+                    {% else %}
+                        <span class="dot dot-gray"></span>
+                    {% endif %}
+                    <strong>{{ pr.pr_number }}</strong> {{ pr.title }}
+                    <span class="ms-auto hub-status-pill
+                        {% if pr.status in ['Merged', 'MERGED'] %}pill-merged
+                        {% elif pr.status in ['Open', 'OPEN'] %}pill-open
+                        {% else %}pill-closed{% endif %}">
+                        {{ pr.status.title() }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{{ url_for('hub_pull_requests', release_id=overview.release.release_id) }}"
+               style="font-size:0.8rem;color:#1d4ed8;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">
+                <i class="bi bi-arrow-right-circle"></i> Click to view more
+            </a>
+        {% else %}
+            <p class="text-muted" style="font-size:0.83rem;">No pull requests attached.</p>
+        {% endif %}
+    </div>
+
+    <div class="hub-panel hub-panel-amber" id="doc-panel">
+        <h2 class="hub-panel-title"><i class="bi bi-file-earmark-text me-2 text-warning"></i>Auto Documentation</h2>
+        {% if overview.doc and overview.doc.status != "NOT_GENERATED" %}
+            <div class="hub-doc-line">
+                <i class="bi bi-stars text-warning"></i>
+                <strong>AI-generated</strong> release notes ready
+                <span class="hub-status-pill pill-{% if overview.doc.status == 'APPROVED' %}closed{% else %}in-progress{% endif %} ms-1">
+                    {{ overview.doc.status.replace('_',' ').title() }}
+                </span>
+            </div>
+            {% if overview.doc.risk_summary %}
+            <div class="hub-doc-preview mt-2">{{ overview.doc.risk_summary[:200] }}{% if overview.doc.risk_summary|length > 200 %}…{% endif %}</div>
+            {% endif %}
+            <div class="hub-doc-action">Action: Review / Edit / Approve on the Docs tab</div>
+        {% else %}
+            <div class="hub-doc-line"><i class="bi bi-clock text-muted"></i> No release notes generated yet</div>
+            {% if overview.release.release_branch %}
+            <div class="hub-doc-action">
+                <i class="bi bi-git text-primary me-1"></i>
+                Branch linked: <code style="font-size:0.75rem;">{{ overview.release.release_branch }}</code><br>
+                Click <strong>Generate from Branch</strong> — Bedrock AI will read commits &amp; source files to produce a technical document.
+            </div>
+            {% else %}
+            <div class="hub-doc-action">Click <strong>Generate Docs</strong> — Bedrock AI will summarise your PRs &amp; project details.</div>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <div class="hub-panel-actions">
+        {% if overview.release.release_branch %}
+        <form method="POST" action="{{ url_for('hub_generate_docs_from_branch', release_id=overview.release.release_id) }}"
+              id="gen-docs-form" onsubmit="startGenerate()">
+            <button type="submit" class="btn-hub-primary" id="gen-docs-btn">
+                <span id="gen-btn-idle">
+                    <i class="bi bi-git me-1"></i>{% if overview.doc and overview.doc.status != 'NOT_GENERATED' %}Regenerate Doc{% else %}Generate Doc{% endif %}
+                </span>
+                <span id="gen-btn-loading" style="display:none;align-items:center;gap:6px;">
+                    <span class="hub-spinner"></span>Generating…
+                </span>
+            </button>
+        </form>
+        {% else %}
+        <form method="POST" action="{{ url_for('hub_generate_docs', release_id=overview.release.release_id) }}"
+              id="gen-docs-form" onsubmit="startGenerate()">
+            <button type="submit" class="btn-hub-primary" id="gen-docs-btn">
+                <span id="gen-btn-idle">
+                    <i class="bi bi-magic me-1"></i>{% if overview.doc and overview.doc.status != 'NOT_GENERATED' %}Regenerate Doc{% else %}Generate Doc{% endif %}
+                </span>
+                <span id="gen-btn-loading" style="display:none;align-items:center;gap:6px;">
+                    <span class="hub-spinner"></span>Generating…
+                </span>
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function startGenerate() {
+    document.getElementById('gen-btn-idle').style.display = 'none';
+    document.getElementById('gen-btn-loading').style.display = 'inline-flex';
+    document.getElementById('gen-docs-btn').disabled = true;
+    document.getElementById('doc-panel').innerHTML =
+        '<h2 class="hub-panel-title"><i class="bi bi-file-earmark-text me-2 text-warning"></i>Auto Documentation</h2>' +
+        '<div class="hub-ai-generating">' +
+        '  <div class="hub-ai-orb"></div>' +
+        '  <div>' +
+        '    <div style="font-size:0.87rem;font-weight:600;color:#111;margin-bottom:3px;">Bedrock AI is generating your release notes…</div>' +
+        '    <div style="font-size:0.78rem;color:#6b7280;">Analysing pull requests, defects &amp; project context</div>' +
+        '  </div>' +
+        '</div>';
+}
+</script>
+
+<div class="hub-panels-row" style="max-width:calc(100% - 176px);">
+
+    <div class="hub-panel hub-panel-red">
+        <h2 class="hub-panel-title"><i class="bi bi-bug me-2 text-danger"></i>Defects from JIRA Parent</h2>
+        {% if overview.defects %}
+            <ul class="hub-defect-list">
+                {% for d in overview.defects[:3] %}
+                <li>
+                    <span class="hub-key">{{ d.issue_key }}</span>
+                    <span class="hub-severity sev-{{ (d.priority or 'medium').lower() }}">{{ (d.priority or 'Medium').title() }}</span>
+                    <span class="hub-defect-title">{{ d.assigned_to or '—' }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <a href="{{ url_for('hub_defects', release_id=overview.release.release_id) }}"
+               style="font-size:0.8rem;color:#1d4ed8;display:inline-flex;align-items:center;gap:4px;margin-top:8px;">
+                <i class="bi bi-arrow-right-circle"></i> Click to view more
+            </a>
+        {% else %}
+            <p class="text-muted" style="font-size:0.83rem;">
+                No defects linked.
+                <a href="{{ url_for('hub_defects', release_id=overview.release.release_id) }}">Add one</a>
+            </p>
+        {% endif %}
+    </div>
+
+    <div class="hub-panel hub-panel-orange">
+        <h2 class="hub-panel-title"><i class="bi bi-shield-exclamation me-2 text-warning"></i>Security Risk Analysis</h2>
+        {% if overview.security_risks %}
+            <ul class="hub-defect-list">
+                {% for r in overview.security_risks %}
+                <li>
+                    <span class="hub-key">{{ r.tool_name or '—' }}</span>
+                    {% if r.severity %}
+                        <span style="font-size:0.78rem;color:#6b7280;">{{ r.severity }}</span>
+                    {% endif %}
+                    <span class="hub-defect-title">{{ r.title | truncate(40, true, '…') }}</span>
+                    <span class="hub-status-pill
+                        {% if r.status == 'OPEN' %}pill-open
+                        {% else %}pill-closed{% endif %}">
+                        {{ r.status.title() }}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted" style="font-size:0.83rem;">
+                No security risks recorded.
+                <a href="{{ url_for('hub_security', release_id=overview.release.release_id) }}">Add one</a>
+            </p>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="hub-decision-panel">
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Open Defects</div>
+        <div class="hub-decision-value {% if overview.decision.open_defects > 0 %}danger{% else %}success{% endif %}">
+            {{ overview.decision.open_defects }}
+        </div>
+    </div>
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Security Risks</div>
+        <div class="hub-decision-value {% if overview.decision.open_security_risks > 0 %}danger{% else %}success{% endif %}">
+            {{ overview.decision.open_security_risks }}
+        </div>
+    </div>
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Docs Status</div>
+        <div class="hub-decision-value
+            {% if overview.decision.docs_status == 'Approved' %}success
+            {% elif overview.decision.docs_status == 'Generated' %}neutral
+            {% else %}warning{% endif %}">
+            {{ overview.decision.docs_status }}
+        </div>
+    </div>
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Go / No-Go</div>
+        <form method="POST"
+              action="{{ url_for('hub_update_go_no_go', release_id=overview.release.release_id) }}"
+              class="hub-gng-form">
+            <select name="go_no_go"
+                    class="hub-gng-select {% if overview.release.go_no_go_override == 'GO' %}hub-gng-select--go{% elif overview.release.go_no_go_override == 'GO (Tentative)' %}hub-gng-select--tentative{% elif overview.release.go_no_go_override == 'NO-GO' %}hub-gng-select--nogo{% endif %}"
+                    onchange="this.form.submit()"
+                    aria-label="Go/No-Go decision">
+                <option value="" {% if not overview.release.go_no_go_override %}selected{% endif %}>-- Select --</option>
+                <option value="GO" {% if overview.release.go_no_go_override == 'GO' %}selected{% endif %}>GO</option>
+                <option value="GO (Tentative)" {% if overview.release.go_no_go_override == 'GO (Tentative)' %}selected{% endif %}>GO (Tentative)</option>
+                <option value="NO-GO" {% if overview.release.go_no_go_override == 'NO-GO' %}selected{% endif %}>NO-GO</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

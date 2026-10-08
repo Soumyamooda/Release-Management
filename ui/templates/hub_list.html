@@ -1,0 +1,83 @@
+{% extends "hub_base.html" %}
+{% block title %}ReleaseHub – All Releases{% endblock %}
+
+{% block content %}
+<div class="hub-section-header">
+    <h1 class="hub-section-title">All Releases</h1>
+    <a href="{{ url_for('create_release') }}" class="btn-hub-primary" style="width:auto;padding:8px 16px;">
+        <i class="bi bi-plus-lg me-1"></i>New Release
+    </a>
+</div>
+
+{% if releases %}
+<table class="hub-table">
+    <thead>
+        <tr>
+            <th>Release</th>
+            <th>Project</th>
+            <th>Owner</th>
+            <th>Target Date</th>
+            <th>Status</th>
+            <th>Readiness</th>
+            <th>Open Defects</th>
+            <th>Open Risks</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in releases %}
+        {% set r = item.release %}
+        {% set d = item.decision %}
+        <tr>
+            <td><strong>{{ r.release_name }}</strong></td>
+            <td style="font-size:0.83rem;">{{ r.project_name or '—' }}</td>
+            <td style="font-size:0.83rem;">{{ r.owner or '—' }}</td>
+            <td style="font-size:0.83rem;">{{ r.target_date or '—' }}</td>
+            <td>
+                <span class="hub-status-pill
+                    {% if r.status == 'DEPLOYED' %}pill-closed
+                    {% elif r.status == 'READY' %}pill-merged
+                    {% elif r.status == 'IN_REVIEW' %}pill-in-progress
+                    {% else %}pill-open{% endif %}">
+                    {{ r.status.replace('_',' ').title() }}
+                </span>
+            </td>
+            <td>
+                <div class="d-flex align-items-center gap-2">
+                    <div class="progress" style="width:70px;height:8px;">
+                        <div class="progress-bar
+                            {% if r.readiness_pct >= 80 %}bg-success
+                            {% elif r.readiness_pct >= 50 %}bg-warning
+                            {% else %}bg-danger{% endif %}"
+                            style="width:{{ r.readiness_pct }}%"></div>
+                    </div>
+                    <span style="font-size:0.78rem;color:#6b7280;">{{ r.readiness_pct }}%</span>
+                </div>
+            </td>
+            <td>
+                <span class="{% if d.open_defects > 0 %}text-danger fw-bold{% else %}text-success{% endif %}">
+                    {{ d.open_defects }}
+                </span>
+            </td>
+            <td>
+                <span class="{% if d.open_security_risks > 0 %}text-danger fw-bold{% else %}text-success{% endif %}">
+                    {{ d.open_security_risks }}
+                </span>
+            </td>
+            <td>
+                <a href="{{ url_for('hub_overview', release_id=r.release_id) }}"
+                   class="btn-hub-outline" style="width:auto;padding:5px 12px;font-size:0.78rem;display:inline-block;">
+                    Open Hub
+                </a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="hub-empty">
+    <i class="bi bi-inbox" style="font-size:2.5rem;display:block;margin-bottom:10px;"></i>
+    No releases found. <a href="{{ url_for('create_release') }}">Create the first one</a>.
+</div>
+{% endif %}
+{% endblock %}

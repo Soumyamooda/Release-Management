@@ -1,0 +1,136 @@
+{% extends "hub_base.html" %}
+{% block title %}{{ release.release_name }} – Actions{% endblock %}
+
+{% block content %}
+<div class="hub-section-header">
+    <h1 class="hub-section-title">
+        <i class="bi bi-lightning-charge me-2"></i>Actions
+    </h1>
+</div>
+
+<div class="hub-decision-panel mb-4">
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Open Defects</div>
+        <div class="hub-decision-value {% if decision.open_defects > 0 %}danger{% else %}success{% endif %}">
+            {{ decision.open_defects }}
+        </div>
+    </div>
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Security Risks</div>
+        <div class="hub-decision-value {% if decision.open_security_risks > 0 %}danger{% else %}success{% endif %}">
+            {{ decision.open_security_risks }}
+        </div>
+    </div>
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Docs Status</div>
+        <div class="hub-decision-value
+            {% if decision.docs_status == 'Approved' %}success
+            {% elif decision.docs_status == 'Generated' %}neutral
+            {% else %}warning{% endif %}">
+            {{ decision.docs_status }}
+        </div>
+    </div>
+    <div class="hub-decision-card">
+        <div class="hub-decision-label">Go / No-Go</div>
+        <form method="POST" action="{{ url_for('hub_set_go_no_go', release_id=release.release_id) }}"
+              style="margin-top:6px;" id="goNoGoForm">
+            <select name="go_no_go"
+                    class="form-select form-select-sm go-no-go-select {% if release.go_no_go_override == 'GO' %}go-no-go-select--go{% elif release.go_no_go_override == 'GO (Tentative)' %}go-no-go-select--tentative{% elif release.go_no_go_override == 'NO-GO' %}go-no-go-select--nogo{% else %}go-no-go-select--default{% endif %}"
+                    onchange="this.form.submit()"
+                    aria-label="Go/No-Go decision">
+                <option value="" {% if not release.go_no_go_override %}selected{% endif %}>-- Select --</option>
+                <option value="GO" {% if release.go_no_go_override == 'GO' %}selected{% endif %}>GO</option>
+                <option value="GO (Tentative)" {% if release.go_no_go_override == 'GO (Tentative)' %}selected{% endif %}>GO (Tentative)</option>
+                <option value="NO-GO" {% if release.go_no_go_override == 'NO-GO' %}selected{% endif %}>NO-GO</option>
+            </select>
+        </form>
+    </div>
+</div>
+
+<div class="hub-action-card">
+    <div class="hub-action-icon icon-blue"><i class="bi bi-git"></i></div>
+    <div class="hub-action-body">
+        <p class="hub-action-title">Review Pull Requests</p>
+        <p class="hub-action-desc">Verify all PRs are merged or closed before release.</p>
+    </div>
+    <a href="{{ url_for('hub_pull_requests', release_id=release.release_id) }}"
+       class="btn-hub-outline" style="width:auto;padding:7px 16px;">
+        <i class="bi bi-arrow-right me-1"></i>Go to PRs
+    </a>
+</div>
+
+<div class="hub-action-card">
+    <div class="hub-action-icon icon-red"><i class="bi bi-bug"></i></div>
+    <div class="hub-action-body">
+        <p class="hub-action-title">Resolve Open Defects</p>
+        <p class="hub-action-desc">
+            {% if decision.open_defects > 0 %}
+                <strong class="text-danger">{{ decision.open_defects }} open defect(s)</strong> must be resolved or closed.
+            {% else %}
+                All defects are resolved. ✓
+            {% endif %}
+        </p>
+    </div>
+    <a href="{{ url_for('hub_defects', release_id=release.release_id) }}"
+       class="btn-hub-outline" style="width:auto;padding:7px 16px;">
+        <i class="bi bi-arrow-right me-1"></i>Go to Defects
+    </a>
+</div>
+
+<div class="hub-action-card">
+    <div class="hub-action-icon icon-amber"><i class="bi bi-shield-exclamation"></i></div>
+    <div class="hub-action-body">
+        <p class="hub-action-title">Resolve Security Risks</p>
+        <p class="hub-action-desc">
+            {% if decision.open_security_risks > 0 %}
+                <strong class="text-danger">{{ decision.open_security_risks }} open risk(s)</strong> must be resolved.
+            {% else %}
+                No open security risks. ✓
+            {% endif %}
+        </p>
+    </div>
+    <a href="{{ url_for('hub_security', release_id=release.release_id) }}"
+       class="btn-hub-outline" style="width:auto;padding:7px 16px;">
+        <i class="bi bi-arrow-right me-1"></i>Go to Security
+    </a>
+</div>
+
+<div class="hub-action-card">
+    <div class="hub-action-icon icon-purple"><i class="bi bi-file-earmark-check"></i></div>
+    <div class="hub-action-body">
+        <p class="hub-action-title">Approve Documentation</p>
+        <p class="hub-action-desc">
+            {% if decision.docs_status == 'Approved' %}
+                Documentation is approved. ✓
+            {% elif decision.docs_status == 'Generated' %}
+                Release notes are generated and awaiting approval.
+            {% else %}
+                Release notes have not been generated yet.
+            {% endif %}
+        </p>
+    </div>
+    <a href="{{ url_for('hub_docs', release_id=release.release_id) }}"
+       class="btn-hub-outline" style="width:auto;padding:7px 16px;">
+        <i class="bi bi-arrow-right me-1"></i>Go to Docs
+    </a>
+</div>
+
+<div class="hub-action-card">
+    <div class="hub-action-icon icon-green"><i class="bi bi-rocket-takeoff"></i></div>
+    <div class="hub-action-body">
+        <p class="hub-action-title">Mark Release as Deployed</p>
+        <p class="hub-action-desc">Update the release status to Deployed once all checks pass.</p>
+    </div>
+    {% if decision.go_no_go in ['GO', 'GO (Tentative)', 'Approved'] %}
+    <form method="POST" action="{{ url_for('hub_mark_deployed', release_id=release.release_id) }}">
+        <button type="submit" class="btn-hub-success" style="width:auto;padding:8px 16px;">
+            <i class="bi bi-check2-circle me-1"></i>Mark Deployed
+        </button>
+    </form>
+    {% else %}
+    <button class="btn-hub-outline" style="width:auto;padding:7px 16px;" disabled title="Resolve all issues first">
+        <i class="bi bi-lock me-1"></i>Blocked
+    </button>
+    {% endif %}
+</div>
+{% endblock %}
