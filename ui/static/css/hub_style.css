@@ -1,0 +1,913 @@
+/* ── ReleaseHub Styles ─────────────────────────────────── */
+
+/* ── Release Manager stat cards ─────────────────────── */
+.rm-stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.rm-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.rm-stat-icon {
+    width: 42px;
+    height: 42px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.rm-stat-number {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #111;
+    line-height: 1;
+}
+
+.rm-stat-label {
+    font-size: 0.78rem;
+    color: #9ca3af;
+    margin-top: 3px;
+}
+
+/* ── Layout ──────────────────────────────────────────── */
+.hub-wrapper {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #f0f2f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.hub-header {
+    display: flex;
+    align-items: center;
+    background: #1a1d24;
+    color: #fff;
+    padding: 0 28px;
+    height: 56px;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+.hub-header-brand {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+}
+
+.hub-header-divider {
+    width: 1px;
+    height: 22px;
+    background: rgba(255,255,255,0.2);
+}
+
+.hub-header-subtitle {
+    font-size: 0.9rem;
+    color: rgba(255,255,255,0.55);
+}
+
+.hub-header-spacer { flex: 1; }
+
+.hub-header-link {
+    font-size: 0.82rem;
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
+.hub-header-link:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+/* ── Body (sidebar + content) ────────────────────────── */
+.hub-body {
+    display: flex;
+    flex: 1;
+}
+
+/* ── Sidebar ─────────────────────────────────────────── */
+.hub-sidebar {
+    width: 190px;
+    background: #1a1d24;
+    padding: 24px 0;
+    flex-shrink: 0;
+}
+
+.hub-sidebar-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.35);
+    padding: 0 20px 8px;
+}
+
+.hub-nav-link {
+    display: block;
+    padding: 9px 20px;
+    font-size: 0.88rem;
+    color: rgba(255,255,255,0.65);
+    text-decoration: none;
+    border-left: 3px solid transparent;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.hub-nav-link:hover {
+    background: rgba(255,255,255,0.07);
+    color: #fff;
+}
+
+.hub-nav-link.active {
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    border-left-color: #4f8ef7;
+    font-weight: 500;
+}
+
+/* ── Main content ────────────────────────────────────── */
+.hub-content {
+    flex: 1;
+    padding: 28px 32px 48px;
+    overflow-y: auto;
+}
+
+/* ── Release title bar ───────────────────────────────── */
+.hub-release-title-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.hub-release-title {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 4px;
+}
+
+.hub-release-meta {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.hub-release-meta span {
+    margin-right: 4px;
+}
+
+.hub-release-meta .meta-sep {
+    color: #ccc;
+    margin: 0 6px;
+}
+
+/* ── Readiness + risk badge ──────────────────────────── */
+.hub-readiness-badge {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    border-radius: 6px;
+    overflow: hidden;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.hub-readiness-pct {
+    background: #fff3cd;
+    color: #8a6000;
+    padding: 7px 14px;
+    border: 1px solid #ffc107;
+}
+
+.hub-risk-high {
+    background: #fde8e8;
+    color: #c0392b;
+    padding: 7px 14px;
+    border: 1px solid #f5a0a0;
+}
+
+.hub-risk-medium {
+    background: #fff3cd;
+    color: #8a6000;
+    padding: 7px 14px;
+    border: 1px solid #ffc107;
+}
+
+.hub-risk-low {
+    background: #d4edda;
+    color: #1a5c2a;
+    padding: 7px 14px;
+    border: 1px solid #82c896;
+}
+
+/* ── Panel grid ──────────────────────────────────────── */
+.hub-panels-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    align-items: stretch;
+}
+
+.hub-panel {
+    flex: 1;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #e0e3e8;
+    padding: 18px 20px;
+    min-width: 0;
+}
+
+.hub-panel-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    justify-content: flex-start;
+    padding-top: 4px;
+    width: 160px;
+    flex-shrink: 0;
+}
+
+/* Coloured left accent border */
+.hub-panel-blue  { border-left: 4px solid #3b82f6; }
+.hub-panel-red   { border-left: 4px solid #ef4444; }
+.hub-panel-amber { border-left: 4px solid #f59e0b; }
+.hub-panel-orange { border-left: 4px solid #f97316; }
+
+.hub-panel-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 12px;
+}
+
+/* ── Panel list items ────────────────────────────────── */
+.hub-item-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.hub-item-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #333;
+    padding: 3px 0;
+}
+
+.hub-item-list .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dot-blue   { background: #3b82f6; }
+.dot-green  { background: #22c55e; }
+.dot-orange { background: #f97316; }
+.dot-red    { background: #ef4444; }
+.dot-amber  { background: #f59e0b; }
+.dot-gray   { background: #9ca3af; }
+
+/* ── Defects / Risk table-style list ─────────────────── */
+.hub-defect-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.hub-defect-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: #333;
+    padding: 4px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.hub-defect-list li:last-child { border-bottom: none; }
+
+.hub-key {
+    font-weight: 600;
+    min-width: 80px;
+    color: #1d4ed8;
+}
+
+.hub-severity {
+    min-width: 58px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 3px;
+}
+
+.sev-high   { background: #fee2e2; color: #b91c1c; }
+.sev-medium { background: #fef3c7; color: #92400e; }
+.sev-low    { background: #d1fae5; color: #065f46; }
+
+.hub-defect-title { flex: 1; }
+
+.hub-status-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+.pill-open        { background: #fee2e2; color: #b91c1c; }
+.pill-in-progress { background: #fef3c7; color: #92400e; }
+.pill-closed      { background: #d1fae5; color: #065f46; }
+.pill-merged      { background: #ede9fe; color: #5b21b6; }
+
+/* ── Doc panel lines ─────────────────────────────────── */
+.hub-doc-line {
+    font-size: 0.82rem;
+    color: #444;
+    padding: 3px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.hub-doc-action {
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-style: italic;
+    margin-top: 6px;
+}
+
+/* ── Decision panel ──────────────────────────────────── */
+.hub-decision-panel {
+    background: #1a1d24;
+    border-radius: 8px;
+    padding: 20px 28px;
+    margin-top: 8px;
+    display: flex;
+    gap: 0;
+}
+
+.hub-decision-card {
+    flex: 1;
+    padding: 0 24px;
+    border-right: 1px solid rgba(255,255,255,0.12);
+}
+
+.hub-decision-card:first-child { padding-left: 0; }
+.hub-decision-card:last-child  { padding-right: 0; border-right: none; }
+
+.hub-decision-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.hub-decision-value {
+    font-size: 1.55rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.hub-decision-value.danger  { color: #f87171; }
+.hub-decision-value.warning { color: #fbbf24; }
+.hub-decision-value.success { color: #34d399; }
+.hub-decision-value.neutral { color: rgba(255,255,255,0.8); }
+.hub-decision-value.blocked { color: #f87171; }
+.hub-decision-value.approved{ color: #34d399; }
+.hub-decision-value.review  { color: #fbbf24; }
+
+/* ── Go/No-Go dropdown ───────────────────────────────── */
+.hub-gng-form { margin: 0; }
+.hub-gng-select {
+    appearance: none;
+    -webkit-appearance: none;
+    background: #2a2d36 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23aaa' d='M6 8L0 0h12z'/%3E%3C/svg%3E") no-repeat right 10px center;
+    background-size: 10px 6px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    padding: 4px 32px 4px 10px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, color 0.15s;
+    min-width: 160px;
+}
+.hub-gng-select:hover,
+.hub-gng-select:focus { border-color: rgba(255,255,255,0.35); }
+.hub-gng-select--go    { color: #34d399; }
+.hub-gng-select--tentative { color: #fbbf24; }
+.hub-gng-select--nogo  { color: #f87171; }
+.hub-gng-select--review{ color: #fbbf24; }
+.hub-gng-select option { background: #1a1d24; color: #fff; font-weight: 600; }
+
+/* ── Actions page Go/No-Go select variants ───────────── */
+.go-no-go-select { font-weight: 600; border-radius: 6px; cursor: pointer; }
+.go-no-go-select--go        { background: #dcfce7; color: #15803d; border-color: #16a34a; }
+.go-no-go-select--tentative { background: #fef9c3; color: #b45309; border-color: #d97706; }
+.go-no-go-select--nogo      { background: #fee2e2; color: #dc2626; border-color: #dc2626; }
+.go-no-go-select--default   { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+
+/* ── Readiness breakdown progress bars ───────────────── */
+.readiness-bar { height: 100%; border-radius: 4px; transition: width 0.4s; }
+.readiness-bar--complete { background: #22c55e; }
+.readiness-bar--zero     { background: #ef4444; }
+.readiness-bar--partial  { background: #f59e0b; }
+
+/* ── PR milestone version badge ──────────────────────── */
+.version-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+.version-badge--match { background: #ede9fe; color: #6d28d9; border: 1px solid #c4b5fd; }
+.version-badge--other { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+
+/* ── Button overrides for hub ────────────────────────── */
+.btn-hub-primary {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.btn-hub-primary:hover { background: #2563eb; color: #fff; }
+
+.btn-hub-outline {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: #fff;
+    color: #333;
+    border: 1.5px solid #d1d5db;
+    border-radius: 5px;
+    padding: 7px 12px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.btn-hub-outline:hover { background: #f9fafb; color: #111; }
+
+.btn-hub-danger {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: #ef4444;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.btn-hub-danger:hover { background: #dc2626; color: #fff; }
+
+.btn-hub-success {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background: #22c55e;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s;
+}
+.btn-hub-success:hover { background: #16a34a; color: #fff; }
+
+/* ── Section page header ─────────────────────────────── */
+.hub-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    gap: 16px;
+}
+
+.hub-section-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0;
+}
+
+/* ── Full-page table ─────────────────────────────────── */
+.hub-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.86rem;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+.hub-table th {
+    background: #f9fafb;
+    font-weight: 600;
+    color: #374151;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.hub-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
+    vertical-align: middle;
+}
+
+.hub-table tr:last-child td { border-bottom: none; }
+.hub-table tr:hover td { background: #fafafa; }
+
+/* ── Empty state ─────────────────────────────────────── */
+.hub-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: #9ca3af;
+    font-size: 0.9rem;
+}
+
+/* ── Flash messages inside hub ───────────────────────── */
+.hub-flash-container {
+    padding: 0 0 16px;
+}
+
+/* ── Doc textarea ────────────────────────────────────── */
+.hub-doc-card {
+    background: #fff;
+    border: 1px solid #e0e3e8;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 16px;
+}
+
+.hub-doc-card-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #111;
+    margin: 0 0 14px;
+}
+
+.hub-doc-notes {
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 0.84rem;
+    color: #374151;
+    white-space: pre-wrap;
+    min-height: 120px;
+    line-height: 1.6;
+}
+
+/* ── Actions page ────────────────────────────────────── */
+.hub-action-card {
+    background: #fff;
+    border: 1px solid #e0e3e8;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.hub-action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.icon-blue   { background: #eff6ff; color: #3b82f6; }
+.icon-amber  { background: #fffbeb; color: #f59e0b; }
+.icon-red    { background: #fef2f2; color: #ef4444; }
+.icon-green  { background: #f0fdf4; color: #22c55e; }
+.icon-purple { background: #faf5ff; color: #8b5cf6; }
+
+.hub-action-body { flex: 1; }
+.hub-action-title {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #111;
+    margin: 0 0 2px;
+}
+.hub-action-desc {
+    font-size: 0.8rem;
+    color: #6b7280;
+    margin: 0;
+}
+
+.hub-action-status {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
+}
+
+/* ── Integration badges ──────────────────────────────── */
+.integration-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
+
+.integration-badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+}
+
+
+/* ══════════════════════════════════════════════════════════
+   Bedrock AI Documentation – new styles
+   ══════════════════════════════════════════════════════════ */
+
+/* ── Spinner (inline button) ─────────────────────────── */
+.hub-spinner {
+    width: 13px;
+    height: 13px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: hub-spin 0.7s linear infinite;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+@keyframes hub-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ── Animated orb (panel inline) ─────────────────────── */
+.hub-ai-generating {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 0;
+}
+
+.hub-ai-orb {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: conic-gradient(#f59e0b, #3b82f6, #8b5cf6, #f59e0b);
+    animation: hub-spin 1.4s linear infinite;
+    flex-shrink: 0;
+}
+
+/* ── Full-page loading overlay ───────────────────────── */
+#ai-loading-overlay {
+    background: #fff;
+    border: 1px solid #e0e3e8;
+    border-radius: 12px;
+    padding: 40px 32px;
+    margin-bottom: 20px;
+}
+
+.hub-ai-full-loading {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.hub-ai-orb-large {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: conic-gradient(#f59e0b, #3b82f6, #8b5cf6, #22c55e, #f59e0b);
+    animation: hub-spin 1.2s linear infinite;
+    flex-shrink: 0;
+}
+
+.hub-ai-loading-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 6px;
+}
+
+.hub-ai-loading-steps {
+    font-size: 0.83rem;
+    color: #6b7280;
+    min-height: 20px;
+    transition: opacity 0.3s;
+}
+
+/* ── Doc meta bar ────────────────────────────────────── */
+.hub-doc-meta-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.hub-doc-meta-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.hub-doc-meta-badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 4px;
+    background: #fffbeb;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+}
+
+/* ── AI output card ──────────────────────────────────── */
+.hub-doc-output-card {
+    background: #fff;
+    border: 1px solid #e0e3e8;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.hub-doc-impact-card {
+    border-left: 4px solid #3b82f6;
+}
+
+.hub-doc-output-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 22px;
+    border-bottom: 1px solid #f3f4f6;
+    background: #fafafa;
+}
+
+.hub-doc-output-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #fffbeb;
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.hub-doc-output-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #111;
+}
+
+.hub-doc-output-sub {
+    font-size: 0.75rem;
+    color: #9ca3af;
+    margin-top: 1px;
+}
+
+.hub-doc-output-body {
+    padding: 20px 24px;
+    font-size: 0.86rem;
+    color: #374151;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 80px;
+}
+
+/* ── Doc preview snippet (overview card) ─────────────── */
+.hub-doc-preview {
+    font-size: 0.79rem;
+    color: #6b7280;
+    line-height: 1.55;
+    background: #f9fafb;
+    border-radius: 5px;
+    padding: 8px 10px;
+    border-left: 3px solid #f59e0b;
+    margin-top: 8px;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+.hub-ai-empty-state {
+    text-align: center;
+    padding: 56px 40px;
+    background: #fff;
+    border: 1px solid #e0e3e8;
+    border-radius: 12px;
+}
+
+.hub-ai-empty-orb {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #fffbeb;
+    border: 2px solid #fcd34d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+}
+
+.hub-ai-empty-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 10px;
+}
+
+.hub-ai-empty-sub {
+    font-size: 0.85rem;
+    color: #6b7280;
+    max-width: 480px;
+    margin: 0 auto 20px;
+    line-height: 1.65;
+}
+
+.hub-ai-empty-chips {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.hub-ai-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1px solid #e5e7eb;
+}
